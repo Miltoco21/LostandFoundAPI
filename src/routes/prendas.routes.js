@@ -19,7 +19,27 @@ router.use((req, res, next) => {
   next();
 });
 
-// Rutas - IMPORTANTE: estas son rutas relativas a /prendas
+// IMPORTANTE: Rutas específicas ANTES que rutas generales
+// Ruta de prueba DEBE ir ANTES que GET /
+router.get("/test", (req, res) => {
+  console.log("✅ Ruta de prueba de prendas alcanzada");
+  res.json({ 
+    message: "Ruta de prendas funcionando correctamente",
+    timestamp: new Date().toISOString(),
+    query: req.query,
+    path: req.path,
+    originalUrl: req.originalUrl
+  });
+});
+
+// Rutas específicas con parámetros
+router.put("/:id/estado", updateEstadoDevolucion);
+router.put("/:id", updatePrenda);
+
+// Rutas POST
+router.post("/", registroPrendas);
+
+// Ruta GET general - DEBE IR AL FINAL
 router.get("/", async (req, res) => {
   console.log("🎯 ROUTER GET / EJECUTÁNDOSE");
   console.log("📋 RUT query param:", req.query.rut);
@@ -40,20 +60,6 @@ router.get("/", async (req, res) => {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
-});
-
-router.post("/", registroPrendas);
-router.put("/:id/estado", updateEstadoDevolucion);
-router.put("/:id", updatePrenda);
-
-// Ruta de prueba
-router.get("/test", (req, res) => {
-  console.log("✅ Ruta de prueba de prendas alcanzada");
-  res.json({ 
-    message: "Ruta de prendas funcionando correctamente",
-    timestamp: new Date().toISOString(),
-    query: req.query
-  });
 });
 
 console.log("📋 Rutas de prendas cargadas:");

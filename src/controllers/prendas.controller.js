@@ -86,23 +86,85 @@ export const registroPrendas = async (req, res) => {
   }
 };
 
+export const getPrendasByRut = async (req, res) => {
+  try {
+    console.log("🎯 getPrendasByRut INICIANDO");
+    console.log("📦 req.query completo:", req.query);
+    
+    const { rut } = req.query;
+    console.log("📋 RUT extraído:", rut);
+    console.log("🔗 Pool disponible:", !!pool);
+    
+    if (!rut) {
+      console.log("❌ RUT no proporcionado");
+      return res.status(400).json({ 
+        message: "El parámetro RUT es requerido",
+        received: req.query 
+      });
+    }
+
+    console.log("🔍 Ejecutando query SQL para RUT:", rut);
+    
+    // Verificar que pool está disponible
+    if (!pool) {
+      console.error("💥 POOL NO DISPONIBLE");
+      return res.status(500).json({
+        message: "Error de conexión a base de datos - Pool no disponible"
+      });
+    }
+
+    const [rows] = await pool.query(
+      "SELECT * FROM prendas WHERE rut = ? ORDER BY fecha_registro DESC", 
+      [rut]
+    );
+    
+    console.log(`✅ Query exitosa. Prendas encontradas para RUT ${rut}: ${rows.length}`);
+    console.log("📊 Datos encontrados:", rows);
+    
+    // Asegurarse de que siempre devolvemos un array
+    const results = Array.isArray(rows) ? rows : [];
+    
+    console.log("📤 Enviando respuesta:", results);
+    res.status(200).json(results);
+    
+  } catch (error) {
+    console.error("💥 ERROR EN getPrendasByRut:", error);
+    console.error("📊 Error completo:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      sqlState: error.sqlState,
+      sqlMessage: error.sqlMessage
+    });
+    
+    return res.status(500).json({
+      message: "Error al buscar prendas por RUT",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
+    });
+  }
+};
 
 export const getPrendas = async (req, res) => {
   try {
-    // Log the query execution
-    console.log("Executing query to fetch prendas");
+    console.log("🎯 getPrendas INICIANDO (sin RUT)");
+    
+    if (!pool) {
+      console.error("💥 POOL NO DISPONIBLE en getPrendas");
+      return res.status(500).json({
+        message: "Error de conexión a base de datos - Pool no disponible"
+      });
+    }
 
     const [rows] = await pool.query("SELECT * FROM prendas ORDER BY fecha_registro DESC");
-
-    // Log the results fetched from the database
-    console.log("Prendas fetched:", rows.length, "registros");
-
-    res.json(rows);
+    
+    console.log(`✅ getPrendas exitosa. Total prendas: ${rows.length}`);
+    res.status(200).json(rows);
+    
   } catch (error) {
-    console.error("Error fetching prendas:", error);
-
+    console.error("💥 ERROR EN getPrendas:", error);
     return res.status(500).json({
-      message: "Algo salio mal",
+      message: "Error al obtener prendas",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Error interno'
     });
   }
 };
@@ -175,29 +237,7 @@ export const updateEstadoDevolucion = async (req, res) => {
 
 // Obtener prendas por RUT
 
-export const getPrendasByRut = async (req, res) => {
-  try {
-    const { rut } = req.query;
-    console.log("Buscando prendas para RUT:", rut);
-    
-    if (!rut) {
-      return res.status(400).json({ message: "El parámetro RUT es requerido" });
-    }
 
-    const [rows] = await pool.query(
-      "SELECT * FROM prendas WHERE rut = ? ORDER BY fecha_registro DESC", 
-      [rut]
-    );
-    
-    console.log(`Prendas encontradas para RUT ${rut}: ${rows.length}`);
-    res.json(rows);
-  } catch (error) {
-    console.error("Error buscando prendas por RUT:", error);
-    return res.status(500).json({
-      message: "Error al buscar prendas por RUT",
-    });
-  }
-};
 
 // Actualizar una prenda completa
 

@@ -68,7 +68,7 @@ try {
 console.log("🚀 Registrando rutas...");
 
 try {
-  app.use('/api/prendas', rutaPrendas);
+  app.use('/prendas', rutaPrendas);
   console.log("✅ Router de /api/prendas registrado exitosamente");
 } catch (error) {
   console.error("💥 ERROR REGISTRANDO ROUTER:", error);

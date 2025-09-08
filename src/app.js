@@ -1,18 +1,17 @@
 import express, { json } from "express";
-import rutaIndex from '../src/routes/index.routes.js'
-import rutaPrendas from "../src/routes/prendas.routes.js"
 import cors from "cors"
 
 const app = express()
 app.use(cors())
 app.use(express.json())
 
+console.log("🚀 INICIANDO APLICACIÓN");
+
 // Middleware de logging global
 app.use((req, res, next) => {
   console.log(`🌐 GLOBAL: ${req.method} ${req.url}`);
   console.log('📍 Path:', req.path);
   console.log('📦 Query:', req.query);
-  console.log('📦 Body:', req.body);
   next();
 });
 
@@ -41,45 +40,82 @@ app.get('/', (req, res) => {
   });
 });
 
-// Registrar rutas CON prefijo /api
+// IMPORTACIÓN SEGURA DEL ROUTER
+console.log("📦 IMPORTANDO ROUTER DE PRENDAS...");
+let rutaPrendas;
+
+try {
+  const { default: router } = await import("../src/routes/prendas.routes.js");
+  rutaPrendas = router;
+  console.log("✅ Router de prendas importado exitosamente");
+  console.log("📊 Tipo de router:", typeof rutaPrendas);
+} catch (error) {
+  console.error("💥 ERROR IMPORTANDO ROUTER DE PRENDAS:", error);
+  console.error("📍 Error stack:", error.stack);
+  
+  // Crear un router de emergencia
+  console.log("🆘 Creando router de emergencia...");
+  rutaPrendas = express.Router();
+  rutaPrendas.get('/test', (req, res) => {
+    res.json({
+      message: "Router de emergencia - hay un error en prendas.routes.js",
+      error: error.message
+    });
+  });
+}
+
+// REGISTRAR RUTAS
 console.log("🚀 Registrando rutas...");
 
-// ✅ Ruta principal de prendas
-app.use('/api/prendas', rutaPrendas);
+try {
+  app.use('/api/prendas', rutaPrendas);
+  console.log("✅ Router de /api/prendas registrado exitosamente");
+} catch (error) {
+  console.error("💥 ERROR REGISTRANDO ROUTER:", error);
+}
 
-console.log("✅ Rutas registradas:");
-console.log("   /api/prendas ← ESTA ES LA CORRECTA");
+// VERIFICAR QUE LAS RUTAS SE REGISTRARON
+console.log("🔍 VERIFICANDO RUTAS REGISTRADAS:");
+let routesFound = 0;
 
-// ❌ REMOVIDO: Este middleware causaba el error
-// app.use('/api/*', (req, res, next) => { ... });
+if (app._router && app._router.stack) {
+  app._router.stack.forEach((layer, index) => {
+    if (layer.regexp) {
+      const routePath = layer.regexp.toString();
+      console.log(`   ${index}: ${routePath}`);
+      if (routePath.includes('api') && routePath.includes('prendas')) {
+        routesFound++;
+        console.log("   ↳ ✅ Ruta de prendas encontrada");
+      }
+    }
+  });
+}
+
+console.log(`📊 Total de rutas de prendas encontradas: ${routesFound}`);
+
+if (routesFound === 0) {
+  console.error("🚨 ¡PROBLEMA! No se encontraron rutas de prendas registradas");
+}
 
 // Middleware para rutas no encontradas
 app.use((req, res, next) => {
   console.log(`❌ RUTA NO ENCONTRADA: ${req.method} ${req.url}`);
   
-  // Log de rutas disponibles para debug
-  console.log('🔍 Rutas disponibles:');
-  console.log('   GET /health - Estado del servidor');
-  console.log('   GET / - Información de la API');
-  console.log('   GET /api/prendas - Listar prendas');
-  console.log('   POST /api/prendas - Crear prenda');
-  console.log('   PUT /api/prendas/:id - Actualizar prenda');
-  console.log('   PUT /api/prendas/:id/estado - Cambiar estado');
-  console.log('   GET /api/prendas/test - Ruta de prueba');
-  
   res.status(404).json({
     message: 'La ruta solicitada no existe',
     attempted: req.url,
     method: req.method,
+    debug: {
+      originalUrl: req.originalUrl,
+      path: req.path,
+      baseUrl: req.baseUrl,
+      routesFound: routesFound
+    },
     availableRoutes: {
       health: 'GET /health',
       info: 'GET /',
-      prendas: 'GET|POST /api/prendas',
-      prendasById: 'PUT /api/prendas/:id',
-      prendasState: 'PUT /api/prendas/:id/estado',
-      test: 'GET /api/prendas/test'
-    },
-    tip: 'Verifique que esté usando el prefijo /api/ para endpoints de la API'
+      prendas: 'GET|POST /api/prendas (si está funcionando)'
+    }
   });
 });
 

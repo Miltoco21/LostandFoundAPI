@@ -1,13 +1,17 @@
 import { Router } from 'express';
-import {
-  registroPrendas,
-  getPrendas,
-  getPrendasByRut,
-  updateEstadoDevolucion,
-  updatePrenda
-} from "../controllers/prendas.controller.js";
+
+// TEMPORALMENTE comentamos las importaciones del controlador
+// import {
+//   registroPrendas,
+//   getPrendas,
+//   getPrendasByRut,
+//   updateEstadoDevolucion,
+//   updatePrenda
+// } from "../controllers/prendas.controller.js";
 
 const router = Router();
+
+console.log("🚀 INICIANDO ROUTER DE PRENDAS");
 
 // Middleware de logging específico para prendas
 router.use((req, res, next) => {
@@ -19,54 +23,57 @@ router.use((req, res, next) => {
   next();
 });
 
-// IMPORTANTE: Rutas específicas ANTES que rutas generales
-// Ruta de prueba DEBE ir ANTES que GET /
+// Ruta de prueba SIMPLE
 router.get("/test", (req, res) => {
   console.log("✅ Ruta de prueba de prendas alcanzada");
-  res.json({ 
-    message: "Ruta de prendas funcionando correctamente",
+  res.status(200).json({ 
+    message: "🎉 Ruta de prendas funcionando correctamente",
     timestamp: new Date().toISOString(),
     query: req.query,
     path: req.path,
-    originalUrl: req.originalUrl
+    originalUrl: req.originalUrl,
+    method: req.method,
+    baseUrl: req.baseUrl
   });
 });
 
-// Rutas específicas con parámetros
-router.put("/:id/estado", updateEstadoDevolucion);
-router.put("/:id", updatePrenda);
-
-// Rutas POST
-router.post("/", registroPrendas);
-
-// Ruta GET general - DEBE IR AL FINAL
-router.get("/", async (req, res) => {
+// Ruta GET simple sin controladores
+router.get("/", (req, res) => {
   console.log("🎯 ROUTER GET / EJECUTÁNDOSE");
   console.log("📋 RUT query param:", req.query.rut);
   
-  try {
-    if (req.query.rut) {
-      console.log("🔄 Ejecutando getPrendasByRut con RUT:", req.query.rut);
-      await getPrendasByRut(req, res);
-    } else {
-      console.log("🔄 Ejecutando getPrendas (sin RUT)");
-      await getPrendas(req, res);
-    }
-  } catch (error) {
-    console.error("💥 ERROR EN ROUTER:", error);
-    res.status(500).json({
-      error: "Error en el router",
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-  }
+  res.status(200).json({
+    message: "Router básico funcionando",
+    rut: req.query.rut || null,
+    timestamp: new Date().toISOString(),
+    status: "OK - Sin controladores por ahora"
+  });
 });
 
-console.log("📋 Rutas de prendas cargadas:");
-console.log("   GET  /");
-console.log("   POST /");
-console.log("   PUT  /:id/estado");
-console.log("   PUT  /:id");
-console.log("   GET  /test");
+// Rutas POST, PUT temporalmente deshabilitadas
+// router.post("/", registroPrendas);
+// router.put("/:id/estado", updateEstadoDevolucion);
+// router.put("/:id", updatePrenda);
+
+router.post("/", (req, res) => {
+  res.status(200).json({ message: "POST funcionando - controlador deshabilitado temporalmente" });
+});
+
+router.put("/:id", (req, res) => {
+  res.status(200).json({ message: "PUT /:id funcionando - controlador deshabilitado temporalmente" });
+});
+
+router.put("/:id/estado", (req, res) => {
+  res.status(200).json({ message: "PUT /:id/estado funcionando - controlador deshabilitado temporalmente" });
+});
+
+console.log("📋 Rutas de prendas cargadas (versión simplificada):");
+console.log("   GET  / - Respuesta básica");
+console.log("   POST / - Respuesta básica");
+console.log("   PUT  /:id/estado - Respuesta básica");
+console.log("   PUT  /:id - Respuesta básica");
+console.log("   GET  /test - Respuesta básica");
+
+console.log("✅ ROUTER DE PRENDAS CONFIGURADO EXITOSAMENTE");
 
 export default router;

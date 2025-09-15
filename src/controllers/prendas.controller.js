@@ -721,3 +721,89 @@ export const updatePrenda = async (req, res) => {
     console.log("=== FIN updatePrenda ===\n");
   }
 };
+export const diagnosticoEmails = async (req, res) => {
+  console.log("🔧 ========== DIAGNÓSTICO DE EMAILS ==========");
+  
+  try {
+    // 1. Verificar configuración
+    const configTest = await testEmailConfiguration();
+    console.log("📧 Configuración de email:", configTest);
+    
+    // 2. Obtener estados disponibles
+    const availableStates = getAvailableStatuses();
+    console.log("📋 Estados disponibles:", availableStates);
+    
+    // 3. Verificar variables de entorno
+    const envCheck = {
+      EMAIL_USER: !!process.env.EMAIL_USER,
+      EMAIL_PASS: !!process.env.EMAIL_PASS,
+      EMAIL_USER_VALUE: process.env.EMAIL_USER || 'NO_CONFIGURADO'
+    };
+    console.log("🔐 Variables de entorno:", envCheck);
+    
+    res.json({
+      message: "Diagnóstico de emails completado",
+      timestamp: new Date().toISOString(),
+      configuration: configTest,
+      availableStates: availableStates,
+      environment: envCheck,
+      status: configTest.configured ? "✅ CONFIGURADO" : "❌ ERROR"
+    });
+    
+  } catch (error) {
+    console.error("💥 Error en diagnóstico:", error);
+    res.status(500).json({
+      message: "Error en diagnóstico de emails",
+      error: error.message
+    });
+  }
+};
+
+// Función para probar envío de email específico (para testing)
+export const testEmail = async (req, res) => {
+  console.log("🧪 ========== TEST DE EMAIL ==========");
+  
+  try {
+    const { email, estado, prendasDatos } = req.body;
+    
+    if (!email || !estado) {
+      return res.status(400).json({
+        message: "Se requieren 'email' y 'estado' en el body"
+      });
+    }
+    
+    // Datos de prueba si no se proporcionan
+    const testGarment = prendasDatos || {
+      id: 999,
+      tipo_prenda: "Poleron TEST",
+      talla: "M",
+      estado: "Bueno",
+      observaciones: "Prenda de prueba para testing",
+      nombre: "Usuario Test"
+    };
+    
+    console.log(`🧪 Probando envío a: ${email}`);
+    console.log(`📊 Estado: ${estado}`);
+    console.log(`📦 Datos: ${JSON.stringify(testGarment)}`);
+    
+    const emailResult = await sendStatusUpdateEmail(email, testGarment, estado);
+    
+    res.json({
+      message: "Test de email completado",
+      timestamp: new Date().toISOString(),
+      emailResult: emailResult,
+      testData: {
+        email,
+        estado,
+        garment: testGarment
+      }
+    });
+    
+  } catch (error) {
+    console.error("💥 Error en test de email:", error);
+    res.status(500).json({
+      message: "Error en test de email",
+      error: error.message
+    });
+  }
+};

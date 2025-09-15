@@ -1,58 +1,8 @@
-// // emailsender.js - Versión corregida con sintaxis ES modules
-// import nodemailer from 'nodemailer';
-
-// // Configuración del transporter (ejemplo con Gmail)
-// const transporter = nodemailer.createTransport({
-//   service: 'gmail',
-//   auth: {
-//     user: process.env.EMAIL_USER,
-//     pass: process.env.EMAIL_PASS
-//   }
-// });
-
-// // Función para enviar notificación de prenda encontrada
-// export const sendGarmentFoundEmail = async (userEmail, garmentDetails) => {
-//   const mailOptions = {
-//     from: process.env.EMAIL_USER,
-//     to: userEmail,
-//     subject: '¡Tu prenda ha sido encontrada! 🎉',
-//     html: `
-//       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-//         <h2 style="color: #1976d2;">¡Buena noticia!</h2>
-//         <p>Hemos encontrado tu prenda en nuestro sistema de objetos perdidos.</p>
-        
-//         <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-//           <h3>Detalles de la prenda:</h3>
-//           <p><strong>Tipo:</strong> ${garmentDetails.tipo_prenda}</p>
-//           <p><strong>Talla:</strong> ${garmentDetails.talla}</p>
-//           <p><strong>Estado:</strong> ${garmentDetails.estado}</p>
-//           <p><strong>Fecha de registro:</strong> ${new Date(garmentDetails.fecha_registro).toLocaleDateString()}</p>
-//           ${garmentDetails.observaciones ? `<p><strong>Observaciones:</strong> ${garmentDetails.observaciones}</p>` : ''}
-//         </div>
-
-//         <p>Por favor, acércate a nuestra oficina de objetos perdidos para reclamar tu prenda.</p>
-        
-//         <p style="color: #666; font-size: 14px; margin-top: 30px;">
-//           Este es un mensaje automático, por favor no respondas a este correo.
-//         </p>
-//       </div>
-//     `
-//   };
-
-//   try {
-//     const info = await transporter.sendMail(mailOptions);
-//     console.log('Email enviado: ', info.messageId);
-//     return true;
-//   } catch (error) {
-//     console.error('Error enviando email: ', error);
-//     return false;
-//   }
-// };
-// emailsender.js - Sistema de plantillas dinámicas por estado
+// emailsender.js - Sistema de plantillas dinámicas por estado - VERSIÓN CORREGIDA
 import nodemailer from 'nodemailer';
 
-// Configuración del transporter
-const transporter = nodemailer.createTransporter({
+// Configuración del transporter - CORREGIDO: createTransport (no createTransporter)
+const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
@@ -60,7 +10,7 @@ const transporter = nodemailer.createTransporter({
   }
 });
 
-// Plantillas de email por estado
+// Plantillas de email por estado - MEJORADAS CON LOGGING
 const emailTemplates = {
   "Encontrada - Pendiente de devolución": {
     subject: "¡Tu prenda ha sido encontrada! 🎉",
@@ -274,13 +224,49 @@ const emailTemplates = {
   }
 };
 
-// Función principal para enviar emails dinámicos
+// Función principal para enviar emails dinámicos - MEJORADA CON LOGGING DETALLADO
 export const sendStatusUpdateEmail = async (userEmail, garmentDetails, newStatus) => {
-  const template = emailTemplates[newStatus];
+  console.log("🔍 ========== INICIO sendStatusUpdateEmail ==========");
+  console.log(`📧 Email destino: ${userEmail}`);
+  console.log(`📊 Estado solicitado: "${newStatus}"`);
+  console.log(`📦 Detalles prenda:`, garmentDetails);
   
-  if (!template || !template.shouldSendEmail) {
-    console.log(`📧 No se enviará email para el estado: ${newStatus}`);
-    return { sent: false, reason: 'No template or email disabled for this status' };
+  // Validar entrada
+  if (!userEmail || !newStatus) {
+    console.log("❌ Parámetros faltantes:");
+    console.log(`   - Email: ${userEmail}`);
+    console.log(`   - Estado: ${newStatus}`);
+    return { sent: false, reason: 'Email o estado faltante' };
+  }
+
+  // Buscar plantilla exacta
+  const template = emailTemplates[newStatus];
+  console.log(`🔍 Plantilla encontrada para "${newStatus}":`, !!template);
+  
+  // Mostrar todos los estados disponibles para debug
+  console.log("📋 Estados disponibles en plantillas:");
+  Object.keys(emailTemplates).forEach(key => {
+    console.log(`   - "${key}" (envía: ${emailTemplates[key].shouldSendEmail})`);
+  });
+  
+  if (!template) {
+    console.log(`❌ NO se encontró plantilla para estado: "${newStatus}"`);
+    console.log("💡 Estados disponibles:", Object.keys(emailTemplates));
+    return { sent: false, reason: `No template found for status: ${newStatus}` };
+  }
+
+  if (!template.shouldSendEmail) {
+    console.log(`⚠️ Email deshabilitado para estado: "${newStatus}"`);
+    return { sent: false, reason: 'Email disabled for this status' };
+  }
+
+  console.log(`✅ Plantilla válida encontrada. Preparando envío...`);
+  console.log(`📧 Asunto: ${template.subject}`);
+
+  // Verificar configuración de transporter
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.log("❌ Variables de entorno EMAIL_USER o EMAIL_PASS no configuradas");
+    return { sent: false, reason: 'Email credentials not configured' };
   }
 
   const mailOptions = {
@@ -290,18 +276,33 @@ export const sendStatusUpdateEmail = async (userEmail, garmentDetails, newStatus
     html: template.template(garmentDetails)
   };
 
+  console.log(`📮 Configuración del email:`);
+  console.log(`   - De: ${mailOptions.from}`);
+  console.log(`   - Para: ${mailOptions.to}`);
+  console.log(`   - Asunto: ${mailOptions.subject}`);
+
   try {
+    console.log("🚀 Enviando email...");
     const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Email enviado para estado "${newStatus}": `, info.messageId);
+    console.log(`✅ Email enviado exitosamente para estado "${newStatus}"`);
+    console.log(`📬 Message ID: ${info.messageId}`);
+    console.log("🔍 ========== FIN sendStatusUpdateEmail (ÉXITO) ==========");
     return { sent: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`❌ Error enviando email para estado "${newStatus}": `, error);
+    console.error(`❌ Error enviando email para estado "${newStatus}":`, error);
+    console.error("🔍 Detalles del error:", {
+      message: error.message,
+      code: error.code,
+      command: error.command
+    });
+    console.log("🔍 ========== FIN sendStatusUpdateEmail (ERROR) ==========");
     return { sent: false, error: error.message };
   }
 };
 
 // Función backward compatible (mantiene la función original)
 export const sendGarmentFoundEmail = async (userEmail, garmentDetails) => {
+  console.log("📞 Llamada a sendGarmentFoundEmail (función legacy)");
   return await sendStatusUpdateEmail(userEmail, garmentDetails, "Encontrada - Pendiente de devolución");
 };
 
@@ -316,4 +317,31 @@ export const getAvailableStatuses = () => {
   return Object.keys(emailTemplates);
 };
 
-// Función actualizada del controlador
+// Función para testing - verificar configuración
+export const testEmailConfiguration = async () => {
+  console.log("🔧 Verificando configuración de email...");
+  
+  try {
+    // Verificar que tenemos las credenciales
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      return { 
+        configured: false, 
+        error: "Variables EMAIL_USER o EMAIL_PASS no configuradas" 
+      };
+    }
+
+    // Intentar verificar la conexión
+    await transporter.verify();
+    
+    return { 
+      configured: true, 
+      user: process.env.EMAIL_USER,
+      templates: Object.keys(emailTemplates).length
+    };
+  } catch (error) {
+    return { 
+      configured: false, 
+      error: error.message 
+    };
+  }
+};

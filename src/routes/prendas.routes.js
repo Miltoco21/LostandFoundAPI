@@ -1,13 +1,13 @@
 import { Router } from 'express';
 
 // TEMPORALMENTE comentamos las importaciones del controlador
-// import {
-//   registroPrendas,
-//   getPrendas,
-//   getPrendasByRut,
-//   updateEstadoDevolucion,
-//   updatePrenda
-// } from "../controllers/prendas.controller.js";
+import {
+  registroPrendas,
+  getPrendas,
+  getPrendasByRut,
+  updateEstadoDevolucion,
+  updatePrenda
+} from "../controllers/prendas.controller.js";
 
 const router = Router();
 
@@ -51,9 +51,9 @@ router.get("/", (req, res) => {
 });
 
 // Rutas POST, PUT temporalmente deshabilitadas
-// router.post("/", registroPrendas);
-// router.put("/:id/estado", updateEstadoDevolucion);
-// router.put("/:id", updatePrenda);
+router.post("/", registroPrendas);
+router.put("/:id/estado", updateEstadoDevolucion);
+router.put("/:id", updatePrenda);
 
 router.post("/", (req, res) => {
   res.status(200).json({ message: "POST funcionando - controlador deshabilitado temporalmente" });

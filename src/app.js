@@ -13,8 +13,9 @@ app.use(express.json());
 console.log('📍 Registrando rutas...');
 
 // Mount routes BEFORE the 404 handler
-app.use('/api', prendasRoutes);  // ← Rutas de prendas (CRUD)
-app.use('/api', searchRoutes);   // ← Rutas de búsqueda (NUEVO)
+app.use('/api', searchRoutes);   // Mount search routes FIRST
+app.use('/api', prendasRoutes);  // Then mount prendas routes
+
 
 console.log('✅ Rutas registradas correctamente');
 

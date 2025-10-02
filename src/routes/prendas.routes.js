@@ -8,7 +8,7 @@ import {
   updateEstadoDevolucion,
   diagnosticoEmails,
   testEmail
-} from './prendasController.js'; // Adjust the import path as needed
+} from '../controllers/prendas.controller'; // Adjust the import path as needed
 
 const router = Router();
 

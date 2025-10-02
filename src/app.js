@@ -56,7 +56,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 Handler - MUST BE LAST
-app.use('*', (req, res) => {
+app.use((req, res) => {
   res.status(404).json({
     message: "La ruta solicitada no existe",
     attempted: req.originalUrl,

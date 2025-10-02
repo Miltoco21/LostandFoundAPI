@@ -4,7 +4,7 @@ import {
   buscarPorEmail, 
   buscarPorTipo,
   busquedaAvanzada 
-} from "../controllers/searchController.js";
+} from "../controllers/search.controller.js";
 
 const router = Router();
 

@@ -2,7 +2,22 @@ import express, { json } from "express";
 import cors from "cors"
 
 const app = express()
-app.use(cors())
+import cors from 'cors';
+
+// Configure CORS options
+const corsOptions = {
+  origin: 'https://pumahue-lostandfound.vercel.app', // Your frontend URL
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'], // Allowed methods
+  allowedHeaders: ['Content-Type', 'Authorization'], // Allowed headers
+  credentials: false // Set to true if you need cookies/auth
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests for all routes
+app.options('*', cors(corsOptions)); // This helps with preflight
+
+
 app.use(express.json())
 
 console.log("🚀 INICIANDO APLICACIÓN");

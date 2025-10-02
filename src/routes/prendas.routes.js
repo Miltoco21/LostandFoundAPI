@@ -1,26 +1,35 @@
-// prendasRoutes.js
-import { Router } from 'express';
-import {
-  getPrendas,
-  getPrendasByRut,
+import { Router } from "express";
+import { 
   registroPrendas,
-  updatePrenda,
+  getPrendas,
   updateEstadoDevolucion,
+  updatePrenda,
   diagnosticoEmails,
   testEmail
-} from '../controllers/prendas.controller'; // Adjust the import path as needed
+} from "../controllers/prendasController.js";
 
 const router = Router();
 
-// Define all your routes here
-router.get('/', getPrendas); // GET /api/prendas
-router.get('/buscar', getPrendasByRut); // GET /api/prendas/buscar?rut=...
-router.post('/', registroPrendas); // POST /api/prendas
-router.put('/:id', updatePrenda); // PUT /api/prendas/1
-router.patch('/:id/estado', updateEstadoDevolucion); // PATCH /api/prendas/1/estado
+// ========== CRUD DE PRENDAS ==========
 
-// Diagnostic routes
-router.get('/diagnostico/emails', diagnosticoEmails);
-router.post('/test-email', testEmail);
+// POST /api/prendas - Registrar nueva prenda
+router.post("/prendas", registroPrendas);
+
+// GET /api/prendas - Obtener todas las prendas
+router.get("/prendas", getPrendas);
+
+// PUT /api/prendas/:id - Actualizar prenda completa
+router.put("/prendas/:id", updatePrenda);
+
+// PATCH /api/prendas/:id/estado - Actualizar solo estado de devolución
+router.patch("/prendas/:id/estado", updateEstadoDevolucion);
+
+// ========== DIAGNÓSTICO Y TESTING ==========
+
+// GET /api/diagnostico-emails - Verificar configuración de emails
+router.get("/diagnostico-emails", diagnosticoEmails);
+
+// POST /api/test-email - Enviar email de prueba
+router.post("/test-email", testEmail);
 
 export default router;

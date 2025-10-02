@@ -6,7 +6,7 @@ import {
   updatePrenda,
   diagnosticoEmails,
   testEmail
-} from "../controllers/prendasController.js";
+} from "../controllers/prendas.controller.js";
 
 const router = Router();
 

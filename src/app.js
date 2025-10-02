@@ -153,6 +153,7 @@
 
 import express, { json } from "express";
 import cors from "cors";
+import prendasRouter from './routes/prendasRoutes.js'; // Adjust the path to your routes file
 
 const app = express();
 
@@ -172,6 +173,7 @@ app.use(cors(corsOptions));
 
 // Middleware para manejar preflight requests
 app.options('*', cors(corsOptions));
+app.use('/api/prendas', prendasRouter);
 
 // ... el resto de tu configuración ...
 console.log("✅ CORS configurado para:", corsOptions.origin);

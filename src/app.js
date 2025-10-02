@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.json());
 
 // Register your routes with base path
-app.use('/api/prendas', prendasRoutes);
+app.use('/api/prendas/buscar', prendasRoutes);
 
 // Basic health check routes (these are the ones shown in your error)
 app.get('/health', (req, res) => {

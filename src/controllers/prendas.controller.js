@@ -1,5 +1,7 @@
 // controllers/prendas.controller.js
 import { pool } from '../db.js';
+import { sendStatusUpdateEmail } from '../utils/emailsender.js';
+
 
 // Crear nueva prenda
 const crearPrenda = async (req, res) => {
@@ -204,27 +206,46 @@ const actualizarPrenda = async (req, res) => {
     `;
 
     await pool.execute(query, [
-      rut,
-      tipo_prenda,
-      nombre,
-      telefono,
-      email,
-      talla,
-      observaciones,
-      estado,
-      estado_devolucion,
-      fecha_devolucion,
+      rut ?? null,
+      tipo_prenda ?? null,
+      nombre ?? null,
+      telefono ?? null,
+      email ?? null,
+      talla ?? null,
+      observaciones ?? null,
+      estado ?? null,
+      estado_devolucion ?? null,
+      fecha_devolucion ?? null,
       id
     ]);
 
     // Obtener el registro actualizado
     const [updated] = await pool.execute('SELECT * FROM prendas WHERE id = ?', [id]);
+    const updatedPrenda = updated[0];
+    console.log('📋 Email encontrado:', updatedPrenda.email);
+console.log('📋 Estado devolucion:', estado_devolucion);
+
+    // Enviar email si hay email registrado y se actualizó el estado_devolucion
+    let emailStatus = null;
+    if (updatedPrenda.email && estado_devolucion) {
+      console.log(`📧 Enviando email a ${updatedPrenda.email} para estado: "${estado_devolucion}"`);
+      emailStatus = await sendStatusUpdateEmail(
+        updatedPrenda.email,
+        updatedPrenda,
+        estado_devolucion
+      );
+      console.log('📬 Resultado del email:', emailStatus);
+    } else {
+      console.log('⚠️ Email no enviado:', !updatedPrenda.email ? 'sin email registrado en la prenda' : 'no se recibió estado_devolucion');
+    }
 
     res.json({
       success: true,
       message: 'Prenda actualizada exitosamente',
-      data: updated[0]
+      data: updatedPrenda,
+      emailStatus
     });
+
   } catch (error) {
     console.error('Error al actualizar prenda:', error);
     res.status(500).json({ 
@@ -233,6 +254,89 @@ const actualizarPrenda = async (req, res) => {
     });
   }
 };
+// const actualizarPrenda = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const {
+//       rut,
+//       tipo_prenda,
+//       nombre,
+//       telefono,
+//       email,
+//       talla,
+//       observaciones,
+//       estado,
+//       estado_devolucion,
+//       fecha_devolucion
+//     } = req.body;
+
+//     // Verificar si existe
+//     const [exists] = await pool.execute('SELECT id FROM prendas WHERE id = ?', [id]);
+    
+//     if (exists.length === 0) {
+//       return res.status(404).json({ 
+//         error: 'Prenda no encontrada' 
+//       });
+//     }
+
+//     const query = `
+//       UPDATE prendas SET
+//         rut = COALESCE(?, rut),
+//         tipo_prenda = COALESCE(?, tipo_prenda),
+//         nombre = COALESCE(?, nombre),
+//         telefono = COALESCE(?, telefono),
+//         email = COALESCE(?, email),
+//         talla = COALESCE(?, talla),
+//         observaciones = COALESCE(?, observaciones),
+//         estado = COALESCE(?, estado),
+//         estado_devolucion = COALESCE(?, estado_devolucion),
+//         fecha_devolucion = COALESCE(?, fecha_devolucion)
+//       WHERE id = ?
+//     `;
+
+//     // await pool.execute(query, [
+//     //   rut,
+//     //   tipo_prenda,
+//     //   nombre,
+//     //   telefono,
+//     //   email,
+//     //   talla,
+//     //   observaciones,
+//     //   estado,
+//     //   estado_devolucion,
+//     //   fecha_devolucion,
+//     //   id
+//     // ]);
+//     await pool.execute(query, [
+//       rut ?? null,           // ← convierte undefined a null
+//       tipo_prenda ?? null,
+//       nombre ?? null,
+//       telefono ?? null,
+//       email ?? null,
+//       talla ?? null,
+//       observaciones ?? null,
+//       estado ?? null,
+//       estado_devolucion ?? null,
+//       fecha_devolucion ?? null,
+//       id
+//     ]);
+
+//     // Obtener el registro actualizado
+//     const [updated] = await pool.execute('SELECT * FROM prendas WHERE id = ?', [id]);
+
+//     res.json({
+//       success: true,
+//       message: 'Prenda actualizada exitosamente',
+//       data: updated[0]
+//     });
+//   } catch (error) {
+//     console.error('Error al actualizar prenda:', error);
+//     res.status(500).json({ 
+//       error: 'Error al actualizar la prenda',
+//       message: error.message 
+//     });
+//   }
+// };
 
 // Eliminar prenda
 const eliminarPrenda = async (req, res) => {

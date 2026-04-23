@@ -13,7 +13,7 @@
     "express": "^5.1.0",
     "mailersend": "^2.6.0",
     "mysql2": "^3.14.4",
-    "nodemailer": "^7.0.6",
+    "nodemailer": "^7.0.13",
     "resend": "^6.1.2"
   },
   "devDependencies": {
